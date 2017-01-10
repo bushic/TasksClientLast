@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -26,8 +27,27 @@ public class TasksActivity extends AppCompatActivity {
 
     private static User currentUser;
     private static long currentListsID;
+
+    public List<Task> getAllTasks() {
+        return allTasks;
+    }
+
+    public void setAllTasks(List<Task> allTasks) {
+        this.allTasks = allTasks;
+    }
+
     private List<Task> allTasks = new ArrayList<>();
+
+    public static ArrayAdapter getAdapter() {
+        return adapter;
+    }
+
+    public static void setAdapter(ArrayAdapter adapter) {
+        TasksActivity.adapter = adapter;
+    }
+
     private static ArrayAdapter adapter;
+    private TasksActivity tasksActivity = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,16 +58,27 @@ public class TasksActivity extends AppCompatActivity {
         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.tasksfab);
         fab.attachToListView(listView);
 
-        final TaskDialogLayout dialog = new TaskDialogLayout();
-        dialog.setTasksActivity(this);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                TaskDialogLayout dialog = new TaskDialogLayout();
+                dialog.setTasksActivity(tasksActivity);
+                dialog.setCurrentListsID(currentListsID);
                 dialog.show(getSupportFragmentManager(),"task");
             }
         });
 
-        TaskDialogLayout.setCurrentListsID(currentListsID);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TaskDialogLayout dialog = new TaskDialogLayout();
+                dialog.setTasksActivity(tasksActivity);
+                dialog.setCurrentListsID(currentListsID);
+                dialog.setSelectedTask(position);
+                dialog.setCurrentTask(allTasks.get(position));
+                dialog.show(getSupportFragmentManager(),"task");
+            }
+        });
 
         new Tasks().execute(currentListsID);
     }
