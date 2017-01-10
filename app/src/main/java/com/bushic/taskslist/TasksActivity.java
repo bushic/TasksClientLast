@@ -66,6 +66,7 @@ public class TasksActivity extends AppCompatActivity {
     }
     public void addTask(Task task){
         adapter.add(task);
+        allTasks.add(task);
     }
 
     public class Tasks extends AsyncTask<Long,Void,List<Task>> {
@@ -90,6 +91,7 @@ public class TasksActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(final List<Task> tasks) {
             ListView listView = (ListView)findViewById(R.id.tasks);
+            allTasks.addAll(tasks);
 
             adapter  = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_2, android.R.id.text1,tasks) {
                 @Override
@@ -103,8 +105,6 @@ public class TasksActivity extends AppCompatActivity {
 
                     text1.setText(tasks.get(position).getName());
                     text2.setText(tasks.get(position).getDescription());
-
-                    allTasks.add(tasks.get(position));
 
                     return view;
                 }

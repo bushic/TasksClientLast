@@ -32,6 +32,15 @@ public class ListsActivity extends AppCompatActivity {
     private static User currentUser;
     private static ArrayAdapter adapter;
     private ListsActivity listsActivity;
+
+    public List<Lists> getAllLists() {
+        return allLists;
+    }
+
+    public void setAllLists(List<Lists> allLists) {
+        this.allLists = allLists;
+    }
+
     private List<Lists> allLists = new ArrayList<>();
 
     @Override
@@ -43,17 +52,31 @@ public class ListsActivity extends AppCompatActivity {
         ListView listView = (ListView)findViewById(R.id.lists);
         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.listsfab);
         fab.attachToListView(listView);
-        final DialogLayout dialog = new DialogLayout();
-        dialog.setCurrentUser(currentUser);
-        dialog.setListsActivity(this);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                DialogLayout dialog = new DialogLayout();
+                dialog.setCurrentUser(currentUser);
+                dialog.setListsActivity(listsActivity);
                 dialog.show(getSupportFragmentManager(),"list");
             }
         });
 
         new TasksLists().execute(currentUser.getId());
+
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                DialogLayout dialogLayout = new DialogLayout();
+                dialogLayout.setListsActivity(listsActivity);
+                dialogLayout.setCurrentUser(currentUser);
+                dialogLayout.setCurrentList(allLists.get(position));
+                dialogLayout.setSelectedList(position);
+                dialogLayout.show(getSupportFragmentManager(),"list");
+                return true;
+            }
+        });
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -68,6 +91,7 @@ public class ListsActivity extends AppCompatActivity {
 
     public void addInList(Lists lists){
         adapter.add(lists);
+        allLists.add(lists);
     }
     public ListsActivity getListsActivity() {
         return listsActivity;
@@ -112,6 +136,7 @@ public class ListsActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(final List<Lists> list) {
             ListView listView = (ListView)findViewById(R.id.lists);
+            allLists.addAll(list);
 
             adapter  = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_2, android.R.id.text1,list) {
                 @Override
@@ -125,8 +150,6 @@ public class ListsActivity extends AppCompatActivity {
 
                     text1.setText(list.get(position).getName());
                     text2.setText(list.get(position).getDescription());
-
-                    allLists.add(list.get(position));
 
                     return view;
                 }
