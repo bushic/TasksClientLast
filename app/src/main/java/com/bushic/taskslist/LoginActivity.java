@@ -75,6 +75,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 text.setText("Неправильный логин или пароль");
             }
             else{
+                ListsActivity.setCurrentUser(user);
                 Intent intent = new Intent(loginActivity, ListsActivity.class);
                 startActivity(intent);
             }
