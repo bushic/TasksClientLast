@@ -4,10 +4,13 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
@@ -38,13 +41,25 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onClick(View v) {
 
-        EditText editLogin = (EditText) findViewById(R.id.editLogin);
-        EditText editPassword = (EditText) findViewById(R.id.editPassword);
-        String[] params = {editLogin.getText().toString(),editPassword.getText().toString()};
+        if (v==(Button)findViewById(R.id.buttonReg)) {
+            EditText editLogin = (EditText) findViewById(R.id.editLogin);
 
-        new TasksListUser().execute(params);
+            EditText editPassword = (EditText) findViewById(R.id.editPassword);
+            String[] params = new String[2];
+            params[0] = editLogin.getText().toString();
+            params[1] = editPassword.getText().toString();
 
-
+            if (params[0].compareTo("")==0||params[1].compareTo("")==0) {
+                TextView text = (TextView) findViewById(R.id.textViewReg);
+                text.setText("Заполните все поля");
+            } else {
+                new TasksListUser().execute(params);
+            }
+        }
+        else {
+            Intent intent = new Intent(registrationActivity, LoginActivity.class);
+            startActivity(intent);
+        }
     }
 
     public class TasksListUser extends AsyncTask<String,Void,User>{
@@ -70,10 +85,11 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
 
         @Override
         protected void onPostExecute(User user) {
-            TextView text = (TextView)findViewById(R.id.textViewReg);
+            TextView text = (TextView) findViewById(R.id.textViewReg);
 
-            if (user == null)
+            if (user == null){
                 text.setText("Пользователь с таким логином уже зарегистрирован");
+            }
             else{
                 Intent intent = new Intent(registrationActivity, LoginActivity.class);
                 startActivity(intent);
