@@ -1,10 +1,15 @@
 package com.bushic.taskslist;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -25,31 +30,62 @@ import java.util.List;
 public class ListsActivity extends AppCompatActivity {
 
     private static User currentUser;
-
-    public static User getCurrentUser() {
-        return currentUser;
-    }
-
-    public static void setCurrentUser(User currentUser) {
-        ListsActivity.currentUser = currentUser;
-    }
+    private static ArrayAdapter adapter;
+    private ListsActivity listsActivity;
+    private List<Lists> allLists = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lists);
 
+        setListsActivity(this);
         ListView listView = (ListView)findViewById(R.id.lists);
         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.listsfab);
         fab.attachToListView(listView);
+        final DialogLayout dialog = new DialogLayout();
+        dialog.setCurrentUser(currentUser);
+        dialog.setListsActivity(this);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new DialogLayout().show(getSupportFragmentManager(),"list");
+                dialog.show(getSupportFragmentManager(),"list");
             }
         });
 
         new TasksLists().execute(currentUser.getId());
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TasksActivity.setCurrentListsID(allLists.get(position).getId());
+                TasksActivity.setCurrentUser(currentUser);
+                Intent intent = new Intent(listsActivity,TasksActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    public void addInList(Lists lists){
+        adapter.add(lists);
+    }
+    public ListsActivity getListsActivity() {
+        return listsActivity;
+    }
+    public void setListsActivity(ListsActivity listsActivity) {
+        this.listsActivity = listsActivity;
+    }
+    public static User getCurrentUser() {
+        return currentUser;
+    }
+    public static void setCurrentUser(User currentUser) {
+        ListsActivity.currentUser = currentUser;
+    }
+    public static ArrayAdapter getAdapter() {
+        return adapter;
+    }
+    public static void setAdapter(ArrayAdapter adapter) {
+        ListsActivity.adapter = adapter;
     }
 
     public class TasksLists extends AsyncTask<Long,Void,List<Lists>> {
@@ -74,8 +110,31 @@ public class ListsActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(List<Lists> lists) {
+        protected void onPostExecute(final List<Lists> list) {
             ListView listView = (ListView)findViewById(R.id.lists);
+
+            adapter  = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_2, android.R.id.text1,list) {
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getView(position, convertView, parent);
+                    TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                    TextView text2 = (TextView) view.findViewById(android.R.id.text2);
+
+                    text1.setTextColor(Color.BLACK);
+                    text2.setTextColor(Color.BLACK);
+
+                    text1.setText(list.get(position).getName());
+                    text2.setText(list.get(position).getDescription());
+
+                    allLists.add(list.get(position));
+
+                    return view;
+                }
+            };
+
+            listView.setAdapter(adapter);
+
+            adapter.setNotifyOnChange(true);
         }
     }
 }

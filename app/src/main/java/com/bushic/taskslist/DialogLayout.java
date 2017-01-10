@@ -8,19 +8,24 @@ import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DialogLayout extends DialogFragment implements DialogInterface.OnClickListener {
 
     private View form=null;
+
+    private static User currentUser;
+    private ListsActivity listsActivity;
+
+    public static User getCurrentUser() {
+        return currentUser;
+    }
+
+    public static void setCurrentUser(User currentUser) {
+        DialogLayout.currentUser = currentUser;
+    }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -52,13 +57,31 @@ public class DialogLayout extends DialogFragment implements DialogInterface.OnCl
         }
     }
 
+    public void setListsActivity(ListsActivity listsActivity) {
+        this.listsActivity = listsActivity;
+    }
+
     public class TasksList extends AsyncTask<Lists,Void,Lists> {
 
         @Override
         protected Lists doInBackground(Lists... params) {
             RestTemplate template = new RestTemplate();
             template.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-            return template.postForObject(Constants.URL.GET_LISTBYID,params[0],Lists.class);
+            Lists lists = template.postForObject(Constants.URL.GET_LISTBYID,params[0],Lists.class);
+
+            Permission permission = new Permission();
+            permission.setListid(lists.getId());
+            permission.setUserid(currentUser.getId());
+
+            template.postForObject(Constants.URL.GET_PERMISSONSBYUSERID,permission,Permission.class);
+
+            return lists;
+        }
+
+        @Override
+        protected void onPostExecute(Lists lists) {
+            //listsActivity.getAdapter().add(lists);
+            listsActivity.addInList(lists);
         }
     }
 }
